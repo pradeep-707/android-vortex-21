@@ -84,7 +84,6 @@ object Libs {
     const val daggerAndroid = "com.google.dagger:dagger-android:${Versions.dagger2}"
     const val daggerAndroidAndroidProcessor = "com.google.dagger:dagger-android-processor:${Versions.dagger2}"
     const val daggerCompiler = "com.google.dagger:dagger-compiler:${Versions.dagger2}"
-
 }
 
 object TestLibs {

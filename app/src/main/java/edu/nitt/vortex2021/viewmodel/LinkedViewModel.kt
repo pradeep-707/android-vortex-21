@@ -5,16 +5,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import edu.nitt.vortex2021.helpers.Resource
+import edu.nitt.vortex2021.helpers.handleResponse
 import edu.nitt.vortex2021.model.*
 import edu.nitt.vortex2021.repository.LinkedRepository
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import retrofit2.Response
 import javax.inject.Inject
 
 class LinkedViewModel @Inject constructor(
-        private val repository: LinkedRepository
-): ViewModel() {
+    private val repository: LinkedRepository
+) : ViewModel() {
     val latestLinkedQuestionResponse = MutableLiveData<Resource<LatestLinkedQuestion>>()
     val checkedLinkedAnswerResponse = MutableLiveData<Resource<CheckedLinkedAnswer>>()
     val additionalHintResponse = MutableLiveData<Resource<Hint>>()
@@ -25,7 +24,7 @@ class LinkedViewModel @Inject constructor(
             latestLinkedQuestionResponse.postValue(Resource.Loading())
             try {
                 val response = repository.getLatestLinkedQuestion()
-                latestLinkedQuestionResponse.postValue(handleLatestLinkedQuestionResponse(response))
+                latestLinkedQuestionResponse.postValue(handleResponse(response))
             } catch (e: Exception) {
                 Log.i("LinkedViewModel", "exception: ${e.message}")
                 latestLinkedQuestionResponse.postValue(Resource.Error("No internet"))
@@ -33,40 +32,16 @@ class LinkedViewModel @Inject constructor(
         }
     }
 
-    private fun handleLatestLinkedQuestionResponse(response: Response<LatestLinkedQuestion>)
-    : Resource<LatestLinkedQuestion> {
-        if (response.isSuccessful) {
-            response.body()?.let { latestLinkedQuestion ->
-                return Resource.Success(latestLinkedQuestion)
-            }
-        }
-        val jsonObject = JSONObject(response.errorBody()!!.string())
-        val message = jsonObject.getString("message")
-        return Resource.Error(message)
-    }
-
-    fun checkLatestLinkedAnswer(checkLinkedAnswerRequest: CheckLinkedAnswerRequest){
+    fun checkLatestLinkedAnswer(checkLinkedAnswerRequest: CheckLinkedAnswerRequest) {
         viewModelScope.launch {
             checkedLinkedAnswerResponse.postValue(Resource.Loading())
             try {
                 val response = repository.checkLatestLinkedAnswer(checkLinkedAnswerRequest)
-                checkedLinkedAnswerResponse.postValue(handleCheckedLinkedAnswerResponse(response))
+                checkedLinkedAnswerResponse.postValue(handleResponse(response))
             } catch (e: Exception) {
                 checkedLinkedAnswerResponse.postValue(Resource.Error("No internet"))
             }
         }
-    }
-
-    private fun handleCheckedLinkedAnswerResponse(response: Response<CheckedLinkedAnswer>)
-            : Resource<CheckedLinkedAnswer> {
-        if (response.isSuccessful) {
-            response.body()?.let { checkedLinkedAnswer ->
-                return Resource.Success(checkedLinkedAnswer)
-            }
-        }
-        val jsonObject = JSONObject(response.errorBody()!!.string())
-        val message = jsonObject.getString("message")
-        return Resource.Error(message)
     }
 
     fun getLatestLinkedQuestionAdditionalHint() {
@@ -74,23 +49,11 @@ class LinkedViewModel @Inject constructor(
             additionalHintResponse.postValue(Resource.Loading())
             try {
                 val response = repository.getLatestLinkedQuestionAdditionalHint()
-                additionalHintResponse.postValue(handleAdditionalHintResponse(response))
+                additionalHintResponse.postValue(handleResponse(response))
             } catch (e: Exception) {
                 additionalHintResponse.postValue(Resource.Error("No internet"))
             }
         }
-    }
-
-    private fun handleAdditionalHintResponse(response: Response<Hint>)
-            : Resource<Hint> {
-        if (response.isSuccessful) {
-            response.body()?.let { additionalHint ->
-                return Resource.Success(additionalHint)
-            }
-        }
-        val jsonObject = JSONObject(response.errorBody()!!.string())
-        val message = jsonObject.getString("message")
-        return Resource.Error(message)
     }
 
     fun getCurrentScoreRank() {
@@ -105,14 +68,4 @@ class LinkedViewModel @Inject constructor(
         }
     }
 
-    private fun <T> handleResponse(response: Response<T>): Resource<T> {
-        if (response.isSuccessful) {
-            response.body()?.let { body ->
-                return Resource.Success(body)
-            }
-        }
-        val jsonObject = JSONObject(response.errorBody()!!.string())
-        val message = jsonObject.getString("message")
-        return Resource.Error(message)
-    }
 }
